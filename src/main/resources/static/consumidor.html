@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Consumidor · Filas OCI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="backdrop" aria-hidden="true"><span></span><span></span><span></span></div>
+
+  <nav class="navbar glass" aria-label="Principal">
+    <a class="navbar-brand" href="/produtor"><span class="logo"></span>Filas OCI <small>· Java</small></a>
+    <div class="nav">
+      <a href="/produtor">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
+        <span>Produtor</span>
+      </a>
+      <a href="/consumidor" class="active" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+        <span>Consumidor</span>
+      </a>
+    </div>
+  </nav>
+
+  <main>
+    <header class="page-header">
+      <span class="eyebrow">GetMessages</span>
+      <h1>Consumidor</h1>
+      <p>Retire um lote de mensagens da fila e dispare os e-mails. Envios com sucesso são excluídos; falhas voltam para a fila e, após o máximo de tentativas, seguem para a DLQ.</p>
+    </header>
+
+    <section class="card glass" aria-labelledby="consume-title">
+      <h2 class="card-title" id="consume-title">Consumir lote</h2>
+      <div class="consume-actions">
+        <button class="btn btn-primary consume-option" type="button" data-canal="false">
+          <span class="label">
+            <span class="spinner" aria-hidden="true"></span>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-4-4m4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+            Consumir
+          </span>
+          <span class="desc">Todas as mensagens da fila</span>
+        </button>
+        <button class="btn btn-glass consume-option" type="button" data-canal="true">
+          <span class="label">
+            <span class="spinner" aria-hidden="true"></span>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></svg>
+            Consumir do canal
+          </span>
+          <span class="desc">Somente <span data-channel>canal</span></span>
+        </button>
+      </div>
+
+      <div class="stats" aria-live="polite">
+        <div class="stat glass"><div class="value" id="stat-total">0</div><div class="label">Retiradas</div></div>
+        <div class="stat glass success"><div class="value" id="stat-enviado">0</div><div class="label">Enviadas</div></div>
+        <div class="stat glass warning"><div class="value" id="stat-devolvido">0</div><div class="label">Devolvidas</div></div>
+        <div class="stat glass danger"><div class="value" id="stat-erro">0</div><div class="label">Erros</div></div>
+      </div>
+
+      <h2 class="card-title">
+        Último lote
+        <span class="muted" id="last-run"></span>
+      </h2>
+      <div id="results">
+        <div class="empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+          <strong>Nada consumido ainda</strong>
+          <p>Escolha uma das opções acima para retirar mensagens da fila.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.7/axios.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/consumidor.js"></script>
+</body>
+</html>

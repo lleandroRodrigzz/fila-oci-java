@@ -1,0 +1,7 @@
+target/
+application.properties
+.oci/
+*.pem
+.idea/
+*.iml
+.vscode/

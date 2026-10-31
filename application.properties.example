@@ -1,0 +1,28 @@
+# Copie este arquivo para "application.properties" e preencha com os dados da sua fila.
+# (application.properties está no .gitignore para não versionar dados da sua conta.)
+
+# --- Credenciais OCI (mesmo arquivo usado pelo exemplo em Node.js: .oci/config) ---
+oci.config.file=.oci/config
+oci.config.profile=DEFAULT
+
+# --- Fila ---
+# Na página de detalhes da fila no console: "Endpoint de mensagens" e "OCID"
+queue.messages.endpoint=https://cell-1.queue.messaging.<regiao>.oci.oraclecloud.com/
+queue.ocid=ocid1.queue.oc1.<regiao>.xxxx
+# Canal usado pelos botoes "PUBLICAR - CANAL" e "CONSUMIR - CANAL"
+queue.channel.id=canal-email
+
+# --- Consumidor ---
+# Máximo de mensagens por GetMessages (a OCI aceita até 20)
+consumer.max.messages=20
+# Long polling: quanto tempo o GetMessages espera por mensagens (0 a 30 s)
+consumer.poll.timeout.seconds=2
+# Ao falhar o envio, a mensagem volta para a fila após este tempo (UpdateMessage)
+consumer.retry.visibility.seconds=10
+
+# --- Envio de e-mail simulado ---
+# Probabilidade (0.0 a 1.0) de uma falha simulada, para demonstrar o reprocessamento
+email.simulated.failure.rate=0.3
+
+# --- Servidor web ---
+server.port=8080
