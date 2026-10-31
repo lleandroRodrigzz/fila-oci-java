@@ -1,6 +1,4 @@
-/* =========================================================================
-   Filas OCI · Java — tema Oracle Redwood + "liquid glass"
-   ========================================================================= */
+/* Tema Oracle Redwood + liquid glass */
 
 :root {
   /* Paleta Oracle Redwood */
@@ -87,7 +85,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Fundo com "blobs" coloridos: é o que dá vida à refração do vidro */
+/* Fundo animado */
 .backdrop {
   position: fixed;
   inset: 0;
@@ -124,7 +122,7 @@ body {
   border-radius: var(--radius-lg);
   isolation: isolate;
 }
-/* Brilho especular: reflexo de luz no topo, como no Liquid Glass da Apple */
+/* Borda com reflexo */
 .glass::before {
   content: "";
   position: absolute;
@@ -396,7 +394,7 @@ textarea.input { min-height: 130px; resize: vertical; }
 .chip.channel { background: var(--oracle-red-soft); color: var(--oracle-red); }
 .chip.plain::before { display: none; }
 
-/* ---------- Lista de histórico (produtor) ---------- */
+/* ---------- Histórico ---------- */
 
 .history { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .history li {
@@ -501,7 +499,7 @@ tbody td:last-child  { border-right: 1px solid var(--glass-edge); border-radius:
 td.mono { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 13px; }
 td.detail { color: var(--ink-2); min-width: 220px; }
 
-/* Em telas pequenas, cada linha vira um cartão */
+/* Mobile: linhas viram cartões */
 @media (max-width: 720px) {
   table, thead, tbody, tr, td { display: block; }
   thead { display: none; }
@@ -532,7 +530,7 @@ td.detail { color: var(--ink-2); min-width: 220px; }
   td.detail { min-width: 0; }
 }
 
-/* Skeleton enquanto consome */
+/* Skeleton */
 .skeleton {
   height: 48px;
   margin-bottom: 8px;
@@ -576,7 +574,7 @@ td.detail { color: var(--ink-2); min-width: 220px; }
 @keyframes toast-in  { from { opacity: 0; transform: translateY(16px) scale(0.96); } }
 @keyframes toast-out { to   { opacity: 0; transform: translateX(24px) scale(0.96); } }
 
-/* ---------- Responsivo navbar ---------- */
+/* ---------- Responsivo ---------- */
 
 @media (max-width: 560px) {
   .navbar { margin: 8px 8px 0; top: 8px; padding-left: 14px; }

@@ -1,4 +1,4 @@
-﻿/* Página do Produtor: POST /api/produtor */
+﻿/* Produtor: POST /api/produtor */
 
 const form = document.getElementById("form");
 const email = document.getElementById("email");
@@ -36,7 +36,6 @@ function validate() {
   return !emailMsg && !textoMsg;
 }
 
-// Limpa o erro assim que o usuário corrige o campo
 email.addEventListener("input", () => email.closest(".field").classList.contains("invalid") && setInvalid(email, ""));
 texto.addEventListener("input", () => {
   counter.textContent = `${texto.value.length} / 2000`;
@@ -71,7 +70,7 @@ form.addEventListener("submit", async (event) => {
   }
 });
 
-// ---------- Histórico da sessão ----------
+// ---------- Histórico ----------
 
 function addToHistory({ messageId, channelId }, destinatario) {
   const li = document.createElement("li");

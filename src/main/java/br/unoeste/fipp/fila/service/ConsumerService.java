@@ -12,17 +12,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Aplicação Consumidora: retira mensagens da fila e dispara os e-mails.
- *
- * <p>Fluxo para cada mensagem (mesma lógica do exemplo original):</p>
- * <ol>
- *   <li>{@code GetMessages}: a mensagem fica invisível para outros consumidores;</li>
- *   <li>Tenta enviar o e-mail;</li>
- *   <li>Sucesso → {@code DeleteMessage}: a mensagem sai da fila definitivamente;</li>
- *   <li>Falha → {@code UpdateMessage}: a mensagem volta para a fila após
- *       {@code retryVisibilitySeconds}. Se falhar mais vezes que o "Máximo de
- *       tentativas de entrega" da fila, a OCI a move para a DLQ.</li>
- * </ol>
+ * Consumidor: retira mensagens da fila e envia os e-mails.
+ * Sucesso exclui a mensagem; falha a devolve para a fila.
  */
 public final class ConsumerService {
 
@@ -45,14 +36,8 @@ public final class ConsumerService {
         this.retryVisibilitySeconds = retryVisibilitySeconds;
     }
 
-    /**
-     * Consome um lote de mensagens.
-     *
-     * @param useChannel {@code true} para consumir só do canal configurado ("CONSUMIR - CANAL")
-     * @return o que aconteceu com cada mensagem retirada
-     */
+    /** useChannel consome só do canal configurado */
     public List<ProcessingResult> consume(boolean useChannel) throws IOException, InterruptedException {
-        // visibilityInSeconds = null → usa o "Timeout de visibilidade" configurado na fila
         List<QueueMessage> messages = queue.getMessages(
                 maxMessages, null, pollTimeoutSeconds, useChannel ? channelId : null);
 
@@ -63,7 +48,6 @@ public final class ConsumerService {
         return results;
     }
 
-    /** Processa uma mensagem; uma falha aqui não interrompe as demais do lote. */
     private ProcessingResult process(QueueMessage message) throws InterruptedException {
         String destination = "?";
         try {
@@ -76,12 +60,10 @@ public final class ConsumerService {
             return new ProcessingResult(message, destination, Status.ENVIADO, "E-mail enviado e mensagem excluída da fila");
 
         } catch (EmailSender.EmailException | IllegalArgumentException e) {
-            // Falha no processamento: devolve para a fila (nova tentativa mais tarde)
             return requeue(message, destination, e.getMessage());
 
         } catch (IOException e) {
-            // Falha ao falar com a OCI no DeleteMessage: a mensagem reaparecerá sozinha
-            // quando o timeout de visibilidade acabar.
+            // Falha no DeleteMessage: a mensagem volta sozinha ao fim da visibilidade
             LOG.log(Level.WARNING, "Erro ao excluir mensagem " + message.id(), e);
             return new ProcessingResult(message, destination, Status.ERRO, e.getMessage());
         }
@@ -99,15 +81,8 @@ public final class ConsumerService {
         }
     }
 
-    /** Situação final de uma mensagem após o processamento. */
     public enum Status { ENVIADO, DEVOLVIDO, ERRO }
 
-    /**
-     * @param message     mensagem retirada da fila
-     * @param destination destinatário do e-mail ("?" se o conteúdo for inválido)
-     * @param status      resultado
-     * @param detail      descrição para exibir ao usuário
-     */
     public record ProcessingResult(QueueMessage message, String destination, Status status, String detail) {
     }
 }

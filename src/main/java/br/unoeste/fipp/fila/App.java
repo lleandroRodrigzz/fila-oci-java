@@ -13,10 +13,8 @@ import br.unoeste.fipp.fila.web.WebServer;
 import java.nio.file.Path;
 
 /**
- * Ponto de entrada: monta os objetos (configuração → assinatura → cliente da fila →
- * serviços → servidor web) e sobe a aplicação.
- *
- * <p>Uso: {@code java -jar fila-oci-java.jar [caminho/do/application.properties]}</p>
+ * Ponto de entrada da aplicação.
+ * Uso: {@code java -jar fila-oci-java.jar [application.properties]}
  */
 public final class App {
 
@@ -24,12 +22,12 @@ public final class App {
         Path configFile = Path.of(args.length > 0 ? args[0] : "application.properties");
         AppConfig config = AppConfig.load(configFile);
 
-        // Camada OCI: credenciais → assinador → cliente HTTP (equivalente ao ociHttpRequest.js)
+        // OCI
         OciCredentials credentials = OciCredentials.fromConfigFile(config.ociConfigFile(), config.ociConfigProfile());
         OciHttpClient ociHttp = new OciHttpClient(new OciRequestSigner(credentials));
         QueueClient queue = new QueueClient(ociHttp, config.queueMessagesEndpoint(), config.queueOcid());
 
-        // Regras de negócio
+        // Serviços
         ProducerService producer = new ProducerService(queue, config.queueChannelId());
         ConsumerService consumer = new ConsumerService(
                 queue,

@@ -4,11 +4,7 @@ import java.util.Random;
 import java.util.logging.Logger;
 
 /**
- * Envio de e-mail simulado: apenas registra no log.
- *
- * <p>Para demonstrar o reprocessamento (UpdateMessage) e a DLQ, falha de forma
- * aleatória conforme a taxa configurada em {@code email.simulated.failure.rate},
- * imitando um provedor de e-mail instável.</p>
+ * Envio simulado: só registra no log e falha aleatoriamente conforme a taxa configurada.
  */
 public final class SimulatedEmailSender implements EmailSender {
 
@@ -17,7 +13,7 @@ public final class SimulatedEmailSender implements EmailSender {
     private final double failureRate;
     private final Random random = new Random();
 
-    /** @param failureRate probabilidade de falha, entre 0.0 (nunca) e 1.0 (sempre) */
+    /** @param failureRate de 0.0 (nunca falha) a 1.0 (sempre falha) */
     public SimulatedEmailSender(double failureRate) {
         if (failureRate < 0.0 || failureRate > 1.0) {
             throw new IllegalArgumentException("A taxa de falha deve estar entre 0.0 e 1.0");

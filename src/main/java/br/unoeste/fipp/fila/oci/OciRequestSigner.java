@@ -19,22 +19,11 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Assina requisições HTTP no padrão exigido pela API da OCI ("Request Signatures").
- *
- * <p>No exemplo em Node.js isso era feito pelo {@code common.DefaultRequestSigner}.
- * Aqui a assinatura é implementada com a biblioteca padrão do Java, o que deixa
- * explícito o que o SDK fazia "por baixo dos panos":</p>
- * <ol>
- *   <li>Monta uma "string de assinatura" com alguns cabeçalhos da requisição;</li>
- *   <li>Assina essa string com a chave privada RSA (algoritmo SHA256withRSA);</li>
- *   <li>Coloca o resultado no cabeçalho {@code Authorization}.</li>
- * </ol>
- *
- * <p>Referência: https://docs.oracle.com/iaas/Content/API/Concepts/signingrequests.htm</p>
+ * Assina requisições no padrão da OCI (RSA-SHA256).
+ * Ref.: https://docs.oracle.com/iaas/Content/API/Concepts/signingrequests.htm
  */
 public final class OciRequestSigner {
 
-    /** Formato de data HTTP (RFC 7231), sempre em GMT e em inglês. */
     private static final DateTimeFormatter HTTP_DATE =
             DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US);
 
@@ -46,27 +35,18 @@ public final class OciRequestSigner {
         this.privateKey = loadPrivateKey(credentials);
     }
 
-    /**
-     * Gera os cabeçalhos de assinatura de uma requisição.
-     *
-     * @param method método HTTP (GET, POST, PUT, DELETE)
-     * @param uri    URI completa da requisição (com query string, se houver)
-     * @param body   corpo em JSON, ou {@code null} se não houver corpo
-     * @return cabeçalhos que devem ser enviados junto com a requisição
-     *         (o {@code content-length} é calculado pelo próprio HttpClient)
-     */
+    /** Retorna os cabeçalhos de assinatura que devem ser enviados na requisição. */
     public Map<String, String> sign(String method, URI uri, String body) {
         String lowerMethod = method.toLowerCase(Locale.ROOT);
         boolean hasBody = lowerMethod.equals("post") || lowerMethod.equals("put");
         byte[] bodyBytes = (body == null ? "" : body).getBytes(StandardCharsets.UTF_8);
 
-        // Cabeçalhos que entram na assinatura, NA ORDEM em que serão assinados.
+        // A ordem importa: é a mesma informada em "headers"
         Map<String, String> signed = new LinkedHashMap<>();
         signed.put("(request-target)", lowerMethod + " " + pathAndQuery(uri));
         signed.put("host", hostHeader(uri));
         signed.put("date", HTTP_DATE.format(ZonedDateTime.now(ZoneOffset.UTC)));
         if (hasBody) {
-            // Para POST/PUT a OCI exige também o hash e o tamanho do corpo.
             signed.put("x-content-sha256", sha256Base64(bodyBytes));
             signed.put("content-type", "application/json");
             signed.put("content-length", String.valueOf(bodyBytes.length));
@@ -79,8 +59,7 @@ public final class OciRequestSigner {
                 "Signature version=\"1\",keyId=\"%s\",algorithm=\"rsa-sha256\",headers=\"%s\",signature=\"%s\"",
                 keyId, String.join(" ", signed.keySet()), signature);
 
-        // Cabeçalhos a serem efetivamente enviados (host e content-length são
-        // definidos automaticamente pelo java.net.http.HttpClient).
+        // host e content-length são definidos pelo HttpClient
         Map<String, String> headers = new LinkedHashMap<>();
         headers.put("date", signed.get("date"));
         if (hasBody) {
@@ -91,9 +70,6 @@ public final class OciRequestSigner {
         return headers;
     }
 
-    // ---------- Etapas da assinatura ----------
-
-    /** Junta "nome: valor" de cada cabeçalho, separados por quebra de linha. */
     static String buildSigningString(Map<String, String> signedHeaders) {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, String> h : signedHeaders.entrySet()) {
@@ -134,13 +110,7 @@ public final class OciRequestSigner {
         return uri.getPort() == -1 ? uri.getHost() : uri.getHost() + ":" + uri.getPort();
     }
 
-    // ---------- Leitura da chave privada (.pem) ----------
-
-    /**
-     * Lê a chave privada RSA. Aceita os dois formatos gerados com frequência:
-     * PKCS#8 ("BEGIN PRIVATE KEY", padrão do console OCI) e
-     * PKCS#1 ("BEGIN RSA PRIVATE KEY", gerado pelo openssl antigo).
-     */
+    /** Lê a chave privada .pem nos formatos PKCS#8 ou PKCS#1. */
     private static PrivateKey loadPrivateKey(OciCredentials credentials) throws IOException {
         String pem = Files.readString(credentials.keyFile());
         if (pem.contains("ENCRYPTED")) {
@@ -160,9 +130,9 @@ public final class OciRequestSigner {
         }
     }
 
-    /** Envolve uma chave PKCS#1 na estrutura ASN.1 do PKCS#8 (que é o que o Java lê). */
+    /** Converte PKCS#1 em PKCS#8, único formato lido pelo Java. */
     private static byte[] wrapPkcs1InPkcs8(byte[] pkcs1) {
-        // AlgorithmIdentifier do RSA (OID 1.2.840.113549.1.1.1) + NULL
+        // OID do RSA (1.2.840.113549.1.1.1) + NULL
         byte[] rsaAlgorithmId = {0x30, 0x0d, 0x06, 0x09, 0x2a, (byte) 0x86, 0x48, (byte) 0x86,
                 (byte) 0xf7, 0x0d, 0x01, 0x01, 0x01, 0x05, 0x00};
         byte[] version = {0x02, 0x01, 0x00};

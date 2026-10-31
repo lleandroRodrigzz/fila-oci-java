@@ -17,8 +17,7 @@
     </properties>
 
     <dependencies>
-        <!-- Única dependência externa: conversão JSON <-> objetos Java.
-             HTTP, assinatura RSA e servidor web usam apenas a biblioteca padrão do JDK. -->
+        <!-- JSON -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
@@ -28,7 +27,6 @@
 
     <build>
         <plugins>
-            <!-- Permite rodar com: mvn compile exec:java -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -37,7 +35,6 @@
                     <mainClass>${main.class}</mainClass>
                 </configuration>
             </plugin>
-            <!-- Gera um .jar executável com as dependências: mvn package -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>

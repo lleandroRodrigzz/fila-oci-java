@@ -1,4 +1,4 @@
-/* Cliente da API e utilitários compartilhados pelas páginas. */
+/* Cliente da API e utilitários. */
 
 const api = axios.create({
   baseURL: "/api",
@@ -6,7 +6,6 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-/** Extrai uma mensagem legível de um erro do Axios. */
 function errorMessage(err) {
   if (err.response && err.response.data && err.response.data.erro) return err.response.data.erro;
   if (err.code === "ECONNABORTED") return "A requisição demorou demais para responder.";
@@ -14,7 +13,6 @@ function errorMessage(err) {
   return `Erro ${err.response.status}`;
 }
 
-/** Busca o canal configurado no servidor (cacheado). */
 let configPromise;
 function loadConfig() {
   configPromise ??= api.get("/config").then((r) => r.data).catch(() => ({ channelId: null }));
@@ -27,12 +25,12 @@ const ICONS = {
   danger:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>',
 };
 
-/** Escapa texto para inserir em HTML com segurança (evita XSS). */
+/** Evita XSS. */
 function escapeHtml(text) {
   return String(text ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-/** Notificação flutuante. `body` já deve estar escapado. */
+/** `body` deve vir escapado. */
 function toast(type, title, body) {
   let box = document.querySelector(".toasts");
   if (!box) {
@@ -52,7 +50,6 @@ function toast(type, title, body) {
   }, 4500);
 }
 
-/** Liga/desliga o estado de carregamento de um botão. */
 function setLoading(button, loading) {
   button.classList.toggle("loading", loading);
   button.disabled = loading;

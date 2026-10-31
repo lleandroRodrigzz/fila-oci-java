@@ -7,14 +7,8 @@ import java.nio.file.Path;
 import java.util.Properties;
 
 /**
- * Configurações da aplicação, lidas do arquivo {@code application.properties}.
- *
- * <p>Melhoria em relação ao exemplo original: lá o caminho do config e o perfil
- * ficavam fixos no código. Aqui tudo que muda entre ambientes (OCID da fila,
- * endpoint, tempos) fica fora do código-fonte.</p>
- *
- * <p>Qualquer chave pode ser sobrescrita por variável de ambiente, trocando
- * pontos por "_" e usando maiúsculas. Ex.: {@code queue.ocid} → {@code QUEUE_OCID}.</p>
+ * Configurações do {@code application.properties}.
+ * Variáveis de ambiente têm prioridade (ex.: {@code queue.ocid} → {@code QUEUE_OCID}).
  */
 public final class AppConfig {
 
@@ -24,7 +18,6 @@ public final class AppConfig {
         this.props = props;
     }
 
-    /** Carrega as configurações a partir do arquivo indicado. */
     public static AppConfig load(Path file) throws IOException {
         if (!Files.exists(file)) {
             throw new IOException("Arquivo de configuração não encontrado: " + file.toAbsolutePath()
@@ -37,8 +30,6 @@ public final class AppConfig {
         return new AppConfig(props);
     }
 
-    // ---------- Acesso tipado às chaves usadas pela aplicação ----------
-
     public String ociConfigFile()          { return get("oci.config.file", ".oci/config"); }
     public String ociConfigProfile()       { return get("oci.config.profile", "DEFAULT"); }
     public String queueMessagesEndpoint()  { return require("queue.messages.endpoint"); }
@@ -49,8 +40,6 @@ public final class AppConfig {
     public int consumerRetryVisibilitySeconds() { return getInt("consumer.retry.visibility.seconds", 10); }
     public double emailFailureRate()       { return Double.parseDouble(get("email.simulated.failure.rate", "0.0")); }
     public int serverPort()                { return getInt("server.port", 8080); }
-
-    // ---------- Auxiliares ----------
 
     private String get(String key, String defaultValue) {
         String envKey = key.replace('.', '_').toUpperCase();

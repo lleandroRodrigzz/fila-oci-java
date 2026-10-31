@@ -1,4 +1,4 @@
-/* Página do Consumidor: POST /api/consumidor */
+/* Consumidor: POST /api/consumidor */
 
 const results = document.getElementById("results");
 const lastRun = document.getElementById("last-run");

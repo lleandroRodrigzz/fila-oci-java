@@ -25,22 +25,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Servidor HTTP embutido no JDK com duas responsabilidades:
+ * Servidor HTTP: API REST em JSON e arquivos estáticos de {@code resources/static}.
  *
  * <ul>
- *   <li><b>API REST (JSON)</b>, consumida pelo front-end com Axios:
- *     <ul>
- *       <li>{@code GET  /api/config}: canal configurado;</li>
- *       <li>{@code POST /api/produtor}: {@code {"email","texto","canal"}} → publica na fila;</li>
- *       <li>{@code POST /api/consumidor}: {@code {"canal"}} → consome um lote.</li>
- *     </ul>
- *   </li>
- *   <li><b>Arquivos estáticos</b> (HTML/CSS/JS puros) de {@code src/main/resources/static}:
- *     {@code /produtor} e {@code /consumidor}.</li>
+ *   <li>{@code GET  /api/config}</li>
+ *   <li>{@code POST /api/produtor}   {@code {"email","texto","canal"}}</li>
+ *   <li>{@code POST /api/consumidor} {@code {"canal"}}</li>
  * </ul>
- *
- * <p>Esta classe só trata HTTP. As regras ficam nos serviços e a interface fica
- * inteiramente no front-end — separação de responsabilidades.</p>
  */
 public final class WebServer {
 
@@ -97,7 +88,7 @@ public final class WebServer {
 
             PublishResult result = producer.publish(email, useChannel);
             Map<String, Object> json = new LinkedHashMap<>();
-            // IDs da OCI passam de 2^53: como texto, o JavaScript não perde precisão
+            // Como texto: o id passa de 2^53 e perderia precisão no JavaScript
             json.put("messageId", String.valueOf(result.messageId()));
             json.put("channelId", result.channelId());
             sendJson(ex, 201, json);
@@ -153,7 +144,7 @@ public final class WebServer {
         if (path.equals("/produtor") || path.equals("/consumidor")) {
             path += ".html";
         }
-        // Impede acesso fora da pasta static (path traversal)
+        // Bloqueia path traversal
         if (path.contains("..")) {
             sendError(ex, 400, "Caminho inválido.");
             return;
@@ -169,7 +160,7 @@ public final class WebServer {
         }
     }
 
-    // ---------- Auxiliares HTTP ----------
+    // ---------- Auxiliares ----------
 
     private static boolean requireMethod(HttpExchange ex, String method) throws IOException {
         if (ex.getRequestMethod().equals(method)) {

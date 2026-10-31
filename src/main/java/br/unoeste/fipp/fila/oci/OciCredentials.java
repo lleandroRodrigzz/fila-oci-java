@@ -8,38 +8,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Credenciais de API da OCI lidas do arquivo de configuração padrão ({@code ~/.oci/config}).
- *
- * <p>Equivale ao {@code ConfigFileAuthenticationDetailsProvider} usado no exemplo em Node.js.
- * O arquivo tem formato INI, por exemplo:</p>
- * <pre>
- * [DEFAULT]
- * user=ocid1.user.oc1..xxxx
- * fingerprint=12:34:56:...
- * tenancy=ocid1.tenancy.oc1..xxxx
- * region=sa-saopaulo-1
- * key_file=~/.oci/oci_api_key.pem
- * </pre>
- *
- * @param tenancyOcid OCID da tenancy
- * @param userOcid    OCID do usuário dono da chave de API
- * @param fingerprint impressão digital da chave pública cadastrada no console
- * @param keyFile     caminho da chave privada (.pem)
- * @param region      região padrão do perfil
+ * Credenciais de API lidas do arquivo de configuração da OCI ({@code .oci/config}).
  */
 public record OciCredentials(String tenancyOcid, String userOcid, String fingerprint, Path keyFile, String region) {
 
-    /** Identificador da chave no formato exigido pela OCI: tenancy/usuário/fingerprint. */
+    /** Formato exigido pela OCI: tenancy/usuário/fingerprint. */
     public String keyId() {
         return tenancyOcid + "/" + userOcid + "/" + fingerprint;
     }
 
-    /**
-     * Lê um perfil (ex.: DEFAULT) do arquivo de configuração.
-     *
-     * @param configFile caminho do arquivo; "~" é expandido para a pasta do usuário
-     * @param profile    nome do perfil entre colchetes no arquivo
-     */
     public static OciCredentials fromConfigFile(String configFile, String profile) throws IOException {
         Path configPath = expandHome(configFile);
         if (!Files.exists(configPath)) {
@@ -52,7 +29,7 @@ public record OciCredentials(String tenancyOcid, String userOcid, String fingerp
         }
 
         Path keyFile = expandHome(required(values, "key_file"));
-        // Caminho relativo da chave é resolvido a partir da pasta do arquivo config
+        // Caminho relativo é resolvido a partir da pasta do config
         if (!keyFile.isAbsolute() && configPath.getParent() != null && !Files.exists(keyFile)) {
             keyFile = configPath.getParent().resolve(keyFile);
         }
@@ -65,7 +42,6 @@ public record OciCredentials(String tenancyOcid, String userOcid, String fingerp
                 values.getOrDefault("region", ""));
     }
 
-    /** Percorre as linhas do INI e devolve as chaves do perfil pedido. */
     private static Map<String, String> readProfile(List<String> lines, String profile) {
         Map<String, String> values = new HashMap<>();
         boolean insideProfile = false;

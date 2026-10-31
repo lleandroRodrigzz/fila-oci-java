@@ -13,12 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Cliente da API de Filas da OCI (versão 20210201), com as quatro operações usadas
- * no exemplo: PutMessages (produtor), GetMessages, UpdateMessage e DeleteMessage (consumidor).
- *
- * <p>Centralizar os endpoints aqui evita espalhar URLs montadas "na mão" pelo código.</p>
- *
- * <p>Documentação: https://docs.oracle.com/iaas/api/#/en/queue/20210201/</p>
+ * Cliente da API de Filas da OCI (20210201).
+ * Ref.: https://docs.oracle.com/iaas/api/#/en/queue/20210201/
  */
 public final class QueueClient {
 
@@ -27,11 +23,6 @@ public final class QueueClient {
     private final OciHttpClient http;
     private final String messagesBaseUrl;
 
-    /**
-     * @param http             cliente HTTP que assina as requisições
-     * @param messagesEndpoint "Endpoint de mensagens" mostrado na página da fila
-     * @param queueOcid        OCID da fila
-     */
     public QueueClient(OciHttpClient http, String messagesEndpoint, String queueOcid) {
         this.http = http;
         String base = messagesEndpoint.endsWith("/")
@@ -40,13 +31,7 @@ public final class QueueClient {
         this.messagesBaseUrl = base + "/" + API_VERSION + "/queues/" + queueOcid + "/messages";
     }
 
-    /**
-     * PutMessages — publica uma mensagem na fila.
-     *
-     * @param content   conteúdo (payload) da mensagem
-     * @param channelId canal de destino, ou {@code null} para publicar sem canal
-     * @return id atribuído pela OCI à mensagem
-     */
+    /** PutMessages. Retorna o id da mensagem criada. */
     public long putMessage(String content, String channelId) throws IOException, InterruptedException {
         JsonObject message = new JsonObject();
         message.addProperty("content", content);
@@ -62,7 +47,6 @@ public final class QueueClient {
 
         JsonElement response = http.request("POST", URI.create(messagesBaseUrl), body);
 
-        // Resposta: {"messages":[{"id": 123, ...}]}
         JsonObject first = response.getAsJsonObject().getAsJsonArray("messages").get(0).getAsJsonObject();
         if (first.has("error") && !first.get("error").isJsonNull()) {
             throw new IOException("A OCI recusou a mensagem: " + first.get("errorMessage"));
@@ -71,14 +55,10 @@ public final class QueueClient {
     }
 
     /**
-     * GetMessages — retira até {@code limit} mensagens da fila.
-     * As mensagens retornadas ficam invisíveis para outros consumidores por
-     * {@code visibilityInSeconds} segundos.
+     * GetMessages.
      *
-     * @param limit               quantidade máxima de mensagens (1 a 20)
-     * @param visibilityInSeconds tempo de invisibilidade; {@code null} usa o padrão da fila
-     * @param timeoutInSeconds    long polling: quanto tempo esperar por mensagens (0 a 30)
-     * @param channelFilter       consome apenas deste canal; {@code null} para qualquer mensagem
+     * @param visibilityInSeconds {@code null} usa o padrão da fila
+     * @param channelFilter       {@code null} consome de qualquer canal
      */
     public List<QueueMessage> getMessages(int limit, Integer visibilityInSeconds, int timeoutInSeconds,
                                           String channelFilter) throws IOException, InterruptedException {
@@ -101,11 +81,7 @@ public final class QueueClient {
         return result;
     }
 
-    /**
-     * UpdateMessage — altera o tempo de invisibilidade da mensagem.
-     * Usado para "devolver" a mensagem à fila quando o processamento falha:
-     * depois de {@code visibilityInSeconds} ela poderá ser consumida de novo.
-     */
+    /** UpdateMessage. Devolve a mensagem à fila após {@code visibilityInSeconds}. */
     public void updateMessageVisibility(String receipt, int visibilityInSeconds)
             throws IOException, InterruptedException {
         JsonObject body = new JsonObject();
@@ -113,16 +89,10 @@ public final class QueueClient {
         http.request("PUT", URI.create(messagesBaseUrl + "/" + encode(receipt)), body);
     }
 
-    /**
-     * DeleteMessage — remove definitivamente a mensagem da fila.
-     * Deve ser chamado após o processamento com sucesso; caso contrário,
-     * a mensagem volta para a fila quando o timeout de visibilidade acabar.
-     */
+    /** DeleteMessage. */
     public void deleteMessage(String receipt) throws IOException, InterruptedException {
         http.request("DELETE", URI.create(messagesBaseUrl + "/" + encode(receipt)), null);
     }
-
-    // ---------- Auxiliares ----------
 
     private static QueueMessage toQueueMessage(JsonObject obj) {
         String channelId = null;
@@ -146,7 +116,6 @@ public final class QueueClient {
         return obj.has(field) && !obj.get(field).isJsonNull() ? obj.get(field).getAsString() : null;
     }
 
-    /** O receipt contém caracteres como "+", "/" e "=", que precisam ser codificados na URL. */
     private static String encode(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20");
     }
